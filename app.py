@@ -1,10 +1,11 @@
-git clone https://github.com/helenchristina002-source/palco-de-rua-definitivo.git
-cd palco-de-rua-definitivo
+import streamlit as st
 
-# DEPENDÊNCIAS
-pip install streamlit pandas
-echo streamlit > requirements.txt
-echo pandas >> requirements.txt
+st.set_page_config(page_title="Palco de Rua", page_icon="🎭")
 
-# PASTAS
-mkdir pages data
+st.title("🎭 Palco de Rua – Menu")
+st.write("Escolha um módulo da oficina:")
+
+st.page_link("pages/1_Aquecimento_Reacao.py",
+             label="🔥 Aquecimento – Reação do Espectador", icon="🔥")
+st.page_link("pages/2_Roleta_e_Aplausometro.py",
+             label="🎲 Roleta de Cena + 👏 Aplausômetro", icon="🎲")
