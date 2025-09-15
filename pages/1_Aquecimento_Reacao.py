@@ -4,8 +4,8 @@ from pathlib import Path
 from collections import Counter
 from datetime import datetime
 
-st.set_page_config(page_title="Aquecimento – Reação do Espectador", page_icon="🔥")
-st.title("🔥 Aquecimento – Reação do Espectador")
+st.set_page_config(page_title="Reação do Espectador", page_icon="🔥")
+st.title("Reação do Espectador")
 
 st.write(
     "Depois de assistir ao trecho de teatro de rua, descreva **em 3 palavras** sua sensação. "
@@ -32,7 +32,7 @@ if st.button("Enviar minhas 3 palavras ✨") and nome and p1 and p2 and p3:
     df.to_csv(csv, index=False)
     st.success("Obrigado! Suas palavras entraram no mural.")
 
-st.subheader("🧩 Mural de sentimentos (frequências)")
+st.subheader("🧩 Mural de sentimentos")
 df = pd.read_csv(csv) if csv.exists() else pd.DataFrame(columns=["quando","nome","p1","p2","p3"])
 if not df.empty:
     todas = df["p1"].tolist() + df["p2"].tolist() + df["p3"].tolist()
