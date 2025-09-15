@@ -4,7 +4,7 @@ from pathlib import Path
 from collections import Counter
 from datetime import datetime
 
-st.set_page_config(page_title="Reação do Espectador", page_icon="🔥")
+st.set_page_config(page_title="1. Reação do Espectador", page_icon="🔥")
 st.title("Reação do Espectador")
 
 st.write(
