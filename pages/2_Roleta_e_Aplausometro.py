@@ -17,19 +17,83 @@ if not avaliacoes_csv.exists():
     pd.DataFrame(columns=["quando","grupo","avaliador","voz","clareza","impacto","coment"]).to_csv(avaliacoes_csv, index=False)
 
 # 1) SORTEAR CENA
+import itertools
+
 st.header("1) 🎲 Roleta de Cena (improviso)")
-pers = ["artista mambembe","vendedor ambulante","turista","palhaço","músico de metrô","ativista","mágico de rua","contadora de histórias"]
-lug  = ["praça","pátio da escola","feira","ponto de ônibus","escadaria","corredor","portão de entrada","quadra"]
-conf = ["objeto perdido","mal-entendido","protesto","chuva repentina","plateia hostil","fiscal aparece","concorrência inesperada","música que para"]
 
-if st.button("Sortear nova cena 🎯"):
-    st.session_state.sorteio = (random.choice(pers), random.choice(lug), random.choice(conf))
+# Listas ampliadas
+pers = [
+    "artista mambembe","vendedor ambulante","turista","palhaço","músico de metrô","ativista",
+    "mágico de rua","contadora de histórias","grafiteira","malabarista","fotógrafa urbana",
+    "vigilante da praça","instrutor de capoeira","pichadora arrependida","poeta de slam",
+    "pregador excêntrico","estudante atrasada","influencer ao vivo","mascote da escola",
+    "atriz invisível","repórter improvisado","veterano da feira"
+]
+lug  = [
+    "praça","pátio da escola","feira","ponto de ônibus","escadaria","corredor",
+    "portão de entrada","quadra","biblioteca aberta","refeitório","estacionamento",
+    "marquise","arquibancada","canchita","jardim","hall do auditório"
+]
+conf = [
+    "objeto perdido","mal-entendido","protesto","chuva repentina","plateia hostil","fiscal aparece",
+    "concorrência inesperada","música que para","celular toca no clímax","microfone falha",
+    "criança interrompe","aplauso fora de hora","troca de figurino errada","luz apaga de repente",
+    "barulho de sirene","mensagem urgente chega","câmera gravando sem avisar","barbeiro ambulante entra",
+    "disputa por espaço","mensagem secreta no bilhete"
+]
 
+# Caminho do POOL (todas as combinações possíveis)
+pool_csv = Path("data/roleta_pool.csv")
+pool_csv.parent.mkdir(exist_ok=True)
+
+def gerar_pool():
+    combos = list(itertools.product(pers, lug, conf))
+    df_pool = pd.DataFrame(combos, columns=["personagem","lugar","conflito"])
+    # embaralha a ordem para variar
+    df_pool = df_pool.sample(frac=1, random_state=None).reset_index(drop=True)
+    df_pool.to_csv(pool_csv, index=False)
+    return df_pool
+
+# Carrega ou cria o pool
+if pool_csv.exists():
+    df_pool = pd.read_csv(pool_csv)
+else:
+    df_pool = gerar_pool()
+
+# UI: info e botões de controle do pool
+colA, colB, colC = st.columns([1,1,2])
+with colA:
+    st.metric("Combinações restantes", len(df_pool))
+with colB:
+    if st.button("🔄 Repor pool (recomeçar)", help="Recria todas as combinações e limpa a lista de usados."):
+        df_pool = gerar_pool()
+        st.success("Pool recriado!")
+with colC:
+    skip_remove = st.checkbox("Não remover ao sortear (modo teste)", value=False,
+                              help="Marque apenas se quiser experimentar sem consumir o pool.")
+
+# Sorteio
+if st.button("Sortear próxima cena 🎯"):
+    if df_pool.empty:
+        st.warning("O pool acabou! Clique em 'Repor pool' para recomeçar.")
+    else:
+        # pega a primeira linha do pool (já embaralhado)
+        row = df_pool.iloc[0]
+        st.session_state.sorteio = (row["personagem"], row["lugar"], row["conflito"])
+        st.success(f"**Personagem:** {row['personagem']} | **Lugar:** {row['lugar']} | **Conflito:** {row['conflito']}")
+        st.caption("Dica: 30s para planejar + 45–60s para improvisar. Fechem com uma frase marcante.")
+
+        # consome a combinação sorteada (remove do pool) — a menos que esteja em modo teste
+        if not skip_remove:
+            df_pool = df_pool.iloc[1:].reset_index(drop=True)
+            df_pool.to_csv(pool_csv, index=False)
+
+# Exibe o último sorteio guardado (caso não tenha clicado agora)
 p, l, c = st.session_state.get("sorteio", ("—","—","—"))
-st.success(f"**Personagem:** {p} | **Lugar:** {l} | **Conflito:** {c}")
-st.caption("Dica: 30s para planejar + 45–60s para improvisar. Fechem com uma frase marcante.")
+if p != "—":
+    st.info(f"Último sorteio ativo → **{p}** em **{l}** com **{c}**")
 
-# Cadastro do grupo
+# Cadastro rápido do grupo que vai se apresentar
 st.subheader("👥 Cadastre o grupo que vai apresentar agora")
 grupo = st.text_input("Nome do grupo/cena (ex.: Grupo A, Trio 1)")
 frase_final = st.text_input("Frase final (marcante), opcional")
@@ -38,8 +102,6 @@ if st.button("Salvar sorteio para este grupo 💾") and grupo and p != "—":
     dfc.loc[len(dfc)] = [datetime.now().isoformat(), grupo, p, l, c, frase_final]
     dfc.to_csv(cenas_csv, index=False)
     st.success("Cena registrada para o grupo!")
-
-st.divider()
 
 # 2) APLAUSÔMETRO
 st.header("2) 👏 Aplausômetro (avaliação do público)")
